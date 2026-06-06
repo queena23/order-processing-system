@@ -86,7 +86,7 @@ jobs:
 
       - name: Build and push Docker image
         run: |
-          docker build -t ${{ env.REGISTRY_NAME }}.azurecr.io/order-worker:${{ github.sha }} -t ${{ env.REGISTRY_NAME }}.azurecr.io/order-worker:latest -f Dockerfile .
+          docker build -t ${{ env.REGISTRY_NAME }}.azurecr.io/order-worker:${{ github.sha }} -t ${{ env.REGISTRY_NAME }}.azurecr.io/order-worker:latest -f src/OrderWorker/Dockerfile src/OrderWorker
           docker push ${{ env.REGISTRY_NAME }}.azurecr.io/order-worker:${{ github.sha }}
           docker push ${{ env.REGISTRY_NAME }}.azurecr.io/order-worker:latest
 
