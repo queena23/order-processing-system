@@ -1,0 +1,17 @@
+## Secrets
+local.settings.json
+appsettings.Development.json
+
+## Build output
+**/bin/
+**/obj/
+
+## VS Code
+.vscode/
+
+## OS
+.DS_Store
+Thumbs.db
+
+## Docker
+.dockerignore
