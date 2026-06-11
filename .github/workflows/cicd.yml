@@ -58,10 +58,7 @@ jobs:
           cd ./publish/OrderApi
           zip -r ../../orderapi.zip .
           cd ../..
-          az functionapp deployment source config-zip \
-            --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
-            --name orders-dev-api-q7x2 \
-            --src orderapi.zip
+          az functionapp deployment source config-zip --resource-group ${{ env.AZURE_RESOURCE_GROUP }} --name orders-dev-api-q7x2 --src orderapi.zip
 
       - name: Publish FraudChecker
         run: dotnet publish src/FraudChecker/FraudChecker.csproj -c Release -o ./publish/FraudChecker
@@ -71,10 +68,29 @@ jobs:
           cd ./publish/FraudChecker
           zip -r ../../fraudchecker.zip .
           cd ../..
-          az functionapp deployment source config-zip \
-            --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
-            --name orders-dev-fraud \
-            --src fraudchecker.zip
+          az functionapp deployment source config-zip --resource-group ${{ env.AZURE_RESOURCE_GROUP }} --name orders-dev-fraud --src fraudchecker.zip
 
   build-push-container:
-    name: Build & Push Dock
+    name: Build & Push Docker Image
+    runs-on: ubuntu-latest
+    needs: build-and-test
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Log in to Container Registry
+        run: az acr login --name ${{ env.REGISTRY_NAME }}
+
+      - name: Build and push Docker image
+        run: |
+          docker build -t ${{ env.REGISTRY_NAME }}.azurecr.io/order-worker:${{ github.sha }} -t ${{ env.REGISTRY_NAME }}.azurecr.io/order-worker:latest -f src/OrderWorker/Dockerfile src/OrderWorker
+          docker push ${{ env.REGISTRY_NAME }}.azurecr.io/order-worker:${{ github.sha }}
+          docker push ${{ env.REGISTRY_NAME }}.azurecr.io/order-worker:latest
+
+      - name: Update Container App
+        run: az containerapp update --name orders-dev-worker --resource-group ${{ env.AZURE_RESOURCE_GROUP }} --image ${{ env.REGISTRY_NAME }}.azurecr.io/order-worker:${{ github.sha }}
