@@ -2,7 +2,8 @@ using System.Text.Json;
 using Azure.Messaging.ServiceBus;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
-
+using System.Runtime.CompilerServices;
+[assembly: InternalsVisibleTo("FraudChecker.Tests")]
 namespace FraudChecker;
 
 public class FraudCheck
@@ -91,7 +92,7 @@ public class FraudCheck
         _logger.LogInformation("Order {OrderId} forwarded to processing queue", order.Id);
     }
 
-    private static (bool passed, string? reason) RunFraudRules(Order order)
+    internal static (bool passed, string? reason) RunFraudRules(Order order)
     {
         if (FlaggedCustomers.Contains(order.CustomerId))
             return (false, "Customer account flagged for suspicious activity");
